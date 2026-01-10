@@ -87,9 +87,6 @@ app.get("/users/:id", (req, res) => {
   res.json(user);
 });
 
-console.log("test");
-
-
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
