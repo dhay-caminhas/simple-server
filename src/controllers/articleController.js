@@ -48,6 +48,9 @@ const updateArticle = async (req, res) => {
 
     res.json(updated);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: "Artigo não encontrado" });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -58,6 +61,9 @@ const deleteArticle = async (req, res) => {
     const deleted = await ArticleModel.delete(id);
     res.json(deleted);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: "Artigo não encontrado" });
+    }
     res.status(500).json({ error: error.message });
   }
 };

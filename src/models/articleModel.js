@@ -2,14 +2,9 @@ const prisma = require('../config/prisma');
 
 const ArticleModel = {
   async create(title, content, userId) {
-    // Confirma que o userId existe
-    const userExists = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
-      select: { id: true }
-    });
-
+    const userExists = await ArticleModel.userExists(userId);
     if (!userExists) {
-      throw new Error('Usuário não encontrado'); 
+      throw new Error('Usuário não encontrado');
     }
 
     return await prisma.article.create({
@@ -17,6 +12,14 @@ const ArticleModel = {
         title,
         content,
         userId: parseInt(userId)
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     });
   },
@@ -58,13 +61,29 @@ const ArticleModel = {
 
     return await prisma.article.update({
       where: { id: parseInt(id) },
-      data
+      data,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
   },
 
   async delete(id) {
     return await prisma.article.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
   },
 

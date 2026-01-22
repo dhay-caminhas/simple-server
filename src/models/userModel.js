@@ -2,9 +2,8 @@ const prisma = require('../config/prisma');
 
 const UserModel = {
   create: async (name) => {
-    // ✅ data precisa ser um objeto com a propriedade do modelo
     return await prisma.user.create({
-      data: { name }  // ⚡ chave name com valor vindo do Postman
+      data: { name }
     });
   },
 
