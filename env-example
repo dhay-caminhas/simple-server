@@ -1,0 +1,5 @@
+# Database
+DATABASE_URL="mysql://jobber:jobber123@localhost:3306/jobber_auth"
+
+# Server
+PORT=3000

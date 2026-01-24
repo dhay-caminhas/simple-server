@@ -1,55 +1,98 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 const ArticleModel = {
   async create(title, content, userId) {
-    const [result] = await db.query(
-      "INSERT INTO articles (title, content, userId) VALUES (?, ?, ?)",
-      [title, content, userId]
-    );
-    return { id: result.insertId, title, content, userId };
+    const userExists = await ArticleModel.userExists(userId);
+    if (!userExists) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    return await prisma.article.create({
+      data: {
+        title,
+        content,
+        userId: parseInt(userId)
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
   },
 
   async findAll() {
-    const [articles] = await db.query("SELECT * FROM articles");
-    return articles;
+    return await prisma.article.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
   },
 
   async findById(id) {
-    const [rows] = await db.query("SELECT * FROM articles WHERE id = ?", [id]);
-    return rows[0];
+    return await prisma.article.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
   },
 
   async update(id, title, content) {
-    const updates = [];
-    const values = [];
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (content !== undefined) data.content = content;
 
-    if (title !== undefined) {
-      updates.push("title = ?");
-      values.push(title);
-    }
-    if (content !== undefined) {
-      updates.push("content = ?");
-      values.push(content);
-    }
+    if (Object.keys(data).length === 0) return null;
 
-    if (updates.length === 0) return false;
-
-    values.push(id);
-    const [result] = await db.query(
-      `UPDATE articles SET ${updates.join(", ")} WHERE id = ?`,
-      values
-    );
-    return result.affectedRows > 0;
+    return await prisma.article.update({
+      where: { id: parseInt(id) },
+      data,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
   },
 
   async delete(id) {
-    const [result] = await db.query("DELETE FROM articles WHERE id = ?", [id]);
-    return result.affectedRows > 0;
+    return await prisma.article.delete({
+      where: { id: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
   },
 
   async userExists(userId) {
-    const [rows] = await db.query("SELECT id FROM users WHERE id = ?", [userId]);
-    return rows.length > 0;
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { id: true }
+    });
+    return !!user;
   }
 };
 

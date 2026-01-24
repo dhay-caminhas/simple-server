@@ -1,4 +1,11 @@
-node_modules
 .DS_Store
+node_modules
 .env
 
+.prisma
+prisma/generated
+
+docker-volumes/
+mysql-data/
+
+/src/generated/prisma

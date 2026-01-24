@@ -1,29 +1,35 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 const UserModel = {
-  async create(name) {
-    const [result] = await db.query("INSERT INTO users (name) VALUES (?)", [name]);
-    return { id: result.insertId, name };
+  create: async (name) => {
+    return await prisma.user.create({
+      data: { name }
+    });
   },
 
-  async findAll() {
-    const [users] = await db.query("SELECT * FROM users");
-    return users;
+  findAll: async () => {
+    return await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
   },
 
-  async findById(id) {
-    const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
-    return rows[0];
+  findById: async (id) => {
+    return await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    });
   },
 
-  async update(id, name) {
-    const [result] = await db.query("UPDATE users SET name = ? WHERE id = ?", [name, id]);
-    return result.affectedRows > 0;
+  update: async (id, name) => {
+    return await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { name }
+    });
   },
 
-  async delete(id) {
-    const [result] = await db.query("DELETE FROM users WHERE id = ?", [id]);
-    return result.affectedRows > 0;
+  delete: async (id) => {
+    return await prisma.user.delete({
+      where: { id: parseInt(id) }
+    });
   }
 };
 
