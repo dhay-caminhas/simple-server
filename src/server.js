@@ -29,14 +29,12 @@ app.use(rateLimit({
 }));
 app.use(morgan("combined"));
 
-// Rotas
 app.use("/api/auth", authRoutes);
 app.use("/api/users", authenticate, userRoutes);
 app.use("/api/articles", articleRoutes);
 app.use("/api/likes", likeRoutes); // já autenticado dentro das rotas
 app.use("/api/search", searchRoutes);
 
-// Middleware global de erro
 app.use((err, req, res, next) => {
   logger.error(err.stack);
   res.status(err.status || 500).json({ error: err.message || "Algo deu errado!" });
