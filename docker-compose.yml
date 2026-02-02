@@ -10,6 +10,6 @@ services:
       MYSQL_USER: jobber                  
       MYSQL_PASSWORD: jobber123           
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./docker-volumes/mysql:/var/lib/mysql

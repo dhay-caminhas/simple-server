@@ -2,12 +2,19 @@ const UserModel = require('../models/userModel');
 
 const createUser = async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: "Nome obrigatório" });
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Nome, email e senha são obrigatórios" });
     }
 
-    const user = await UserModel.create(name);
+    const existingUser = await UserModel.findByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ error: "Email já cadastrado" });
+    }
+
+    const user = await UserModel.create(name, email, password);
+
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -27,11 +34,11 @@ const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await UserModel.findById(id);
-    
+
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
-    
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });

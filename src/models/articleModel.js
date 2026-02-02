@@ -1,53 +1,89 @@
 const prisma = require('../config/prisma');
 
+const ALLOWED_SORT_FIELDS = ['createdAt', 'title'];
+
 const ArticleModel = {
+
   async create(title, content, userId) {
-    const userExists = await ArticleModel.userExists(userId);
-    if (!userExists) {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: { id: true }
+    });
+
+    if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    return await prisma.article.create({
+    return prisma.article.create({
       data: {
         title,
         content,
         userId: parseInt(userId)
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        user: { select: { id: true, name: true } }
       }
     });
   },
 
-  async findAll() {
-    return await prisma.article.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true
-          }
+  async findAllPaginated(
+    page = 1,
+    limit = 10,
+    userId = null,
+    search = null,
+    sort = 'createdAt',
+    order = 'desc'
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where = {};
+
+    if (userId) {
+      where.userId = parseInt(userId);
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search } },
+        { content: { contains: search } }
+      ];
+    }
+
+    const safeSort = ALLOWED_SORT_FIELDS.includes(sort)
+      ? sort
+      : 'createdAt';
+
+    const safeOrder = order === 'asc' ? 'asc' : 'desc';
+
+    const [data, total] = await Promise.all([
+      prisma.article.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { [safeSort]: safeOrder },
+        include: {
+          user: { select: { id: true, name: true } },
+          _count: { select: { likes: true } }
         }
-      }
-    });
+      }),
+      prisma.article.count({ where })
+    ]);
+
+    return {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      data
+    };
   },
 
   async findById(id) {
-    return await prisma.article.findUnique({
+    return prisma.article.findUnique({
       where: { id: parseInt(id) },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        user: { select: { id: true, name: true } },
+        _count: { select: { likes: true } }
       }
     });
   },
@@ -59,30 +95,22 @@ const ArticleModel = {
 
     if (Object.keys(data).length === 0) return null;
 
-    return await prisma.article.update({
+    return prisma.article.update({
       where: { id: parseInt(id) },
       data,
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        user: { select: { id: true, name: true } },
+        _count: { select: { likes: true } }
       }
     });
   },
 
   async delete(id) {
-    return await prisma.article.delete({
+    return prisma.article.delete({
       where: { id: parseInt(id) },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        user: { select: { id: true, name: true } },
+        _count: { select: { likes: true } }
       }
     });
   },
